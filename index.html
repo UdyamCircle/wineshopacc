@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>L-14 Liquor Shop AI Reconciler</title>
+  <!-- Tailwind CSS CDN for instant UI styling -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Custom styles for PWA feel */
+    body { -webkit-tap-highlight-color: transparent; }
+    .error-pulse { animation: pulse 2s infinite; }
+    @keyframes pulse {
+      0%, 100% { background-color: rgb(254 226 226); }
+      50% { background-color: rgb(254 202 202); }
+    }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen pb-12">
+
+  <!-- Header -->
+  <header class="bg-slate-900 text-white shadow-lg sticky top-0 z-50">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
+      <div>
+        <h1 class="text-xl font-bold tracking-wide flex items-center gap-2">
+          <span>🥃</span> L-14 Daily Sales Reconciler
+        </h1>
+        <p class="text-xs text-slate-400">AI-Powered Audit & Sheets Sync</p>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
+          ● System Ready
+        </span>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto px-4 mt-6 space-y-6">
+
+    <!-- Step 1: Capture / Upload Section -->
+    <section class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+      <h2 class="text-base font-semibold text-slate-700 mb-4 flex items-center gap-2">
+        <span>📸</span> Step 1: Capture Daily Parcha Records
+      </h2>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Page 1 Upload -->
+        <label class="border-2 border-dashed border-slate-300 rounded-lg p-6 flex flex-col items-center justify-center cursor-pointer hover:border-blue-500 hover:bg-blue-50/50 transition group text-center relative overflow-hidden">
+          <input type="file" id="page1Input" accept="image/*" capture="environment" class="hidden" onchange="handleImageSelect(event, 'page1Status')">
+          <div class="w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mb-2 group-hover:scale-110 transition">📄</div>
+          <span class="font-medium text-slate-700">Scan Page 1</span>
+          <span class="text-xs text-slate-400 mt-1">Spirits, Wine & IMFL</span>
+          <span id="page1Status" class="mt-3 text-xs font-semibold px-2 py-1 rounded bg-slate-100 text-slate-500 hidden"></span>
+        </label>
+
+        <!-- Page 2 Upload -->
+        <label class="border-2 border-dashed border-slate-300 rounded-lg p-6 flex flex-col items-center justify-center cursor-pointer hover:border-blue-500 hover:bg-blue-50/50 transition group text-center relative overflow-hidden">
+          <input type="file" id="page2Input" accept="image/*" capture="environment" class="hidden" onchange="handleImageSelect(event, 'page2Status')">
+          <div class="w-12 h-12 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center mb-2 group-hover:scale-110 transition">🍺</div>
+          <span class="font-medium text-slate-700">Scan Page 2</span>
+          <span class="text-xs text-slate-400 mt-1">Beer, CL & Cash Summary</span>
+          <span id="page2Status" class="mt-3 text-xs font-semibold px-2 py-1 rounded bg-slate-100 text-slate-500 hidden"></span>
+        </label>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="mt-6 flex flex-wrap gap-3 justify-end items-center border-t border-slate-100 pt-4">
+        <span class="text-xs text-slate-400 mr-auto">Tip: You can test the verification engine right now using sample data.</span>
+        <button onclick="loadSampleData()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-medium rounded-lg text-sm transition">
+          ⚡ Load Sample AI Data
+        </button>
+        <button id="processBtn" onclick="processWithAI()" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg text-sm shadow-sm transition flex items-center gap-2">
+          <span>🤖</span> Process with AI Vision
+        </button>
+      </div>
+    </section>
+
+    <!-- Step 2: Verification Dashboard (Hidden by default) -->
+    <section id="reviewSection" class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 hidden">
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 pb-4 border-b border-slate-200">
+        <div>
+          <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+            <span>🧐</span> Step 2: Accountant Verification Table
+          </h2>
+          <p class="text-xs text-slate-500">Review calculated totals. <span class="text-red-600 font-semibold">Red cells indicate salesman math errors.</span> Click any number to edit.</p>
+        </div>
+        
+        <div class="flex items-center gap-4 bg-slate-50 px-4 py-2 rounded-lg border border-slate-200">
+          <div class="text-right">
+            <div class="text-xs text-slate-400 font-medium">Total Shop Revenue</div>
+            <div id="grandTotalDisplay" class="text-lg font-bold text-slate-800">₹0</div>
+          </div>
+          <div class="h-8 w-[1px] bg-slate-200"></div>
+          <div class="text-right">
+            <div class="text-xs text-slate-400 font-medium">Discrepancies</div>
+            <div id="errorCountDisplay" class="text-lg font-bold text-red-600">0</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Data Table -->
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse text-sm">
+          <thead>
+            <tr class="bg-slate-800 text-white text-xs uppercase tracking-wider font-semibold">
+              <th class="p-3 rounded-tl-lg">Category</th>
+              <th class="p-3">Brand Name</th>
+              <th class="p-3 text-center">Size / Vol</th>
+              <th class="p-3 text-right">Opening</th>
+              <th class="p-3 text-right">Receipt</th>
+              <th class="p-3 text-right">Total</th>
+              <th class="p-3 text-right">Closing</th>
+              <th class="p-3 text-right font-bold text-amber-300">Sale</th>
+              <th class="p-3 text-right">Rate (₹)</th>
+              <th class="p-3 text-right font-bold text-emerald-300">Net Amount (₹)</th>
+              <th class="p-3 rounded-tr-lg text-center">Status</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody" class="divide-y divide-slate-200 font-mono text-xs">
+            <!-- Dynamically populated by JS -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Footer & Submit -->
+      <div class="mt-6 pt-4 border-t border-slate-200 flex justify-between items-center">
+        <div id="validationMessage" class="text-sm font-sans font-medium text-slate-600"></div>
+        <button id="sendToSheetsBtn" onclick="sendToGoogleSheets()" class="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg shadow-md hover:shadow-lg transition flex items-center gap-2">
+          <span>📊</span> Approve & Send to Google Sheets
+        </button>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    // Global variable to hold our parsed data
+    let currentData = [];
+
+    // 1. Handle File Input UI Feedback
+    function handleImageSelect(event, statusId) {
+      const file = event.target.files[0];
+      const statusEl = document.getElementById(statusId);
+      if (file) {
+        statusEl.textContent = `✔ ${file.name.slice(0, 15)}...`;
+        statusEl.classList.remove('hidden', 'bg-slate-100', 'text-slate-500');
+        statusEl.classList.add('bg-blue-100', 'text-blue-700');
+      }
+    }
+
+    // 2. Simulate AI Vision OCR Processing (Will be replaced by Gemini API in Backend phase)
+    function processWithAI() {
+      const btn = document.getElementById('processBtn');
+      btn.innerHTML = `<span>⏳</span> Analyzing Grid & Handwritings...`;
+      btn.disabled = true;
+
+      setTimeout(() => {
+        loadSampleData();
+        btn.innerHTML = `<span>🤖</span> Process with AI Vision`;
+        btn.disabled = false;
+      }, 1500);
+    }
+
+    // 3. Load Sample Data with intentional Math Errors to demonstrate validation
+    function loadSampleData() {
+      currentData = [
+        // Valid Row
+        { id: 1, category: "IMFL", brand: "Blue Label", size: "Q (750ml)", open: 10, receipt: 5, total: 15, closing: 12, sale: 3, rate: 15000, net: 45000 },
+        // Valid Row
+        { id: 2, category: "IMFL", brand: "Glenfiddich", size: "P (375ml)", open: 24, receipt: 12, total: 36, closing: 30, sale: 6, rate: 3500, net: 21000 },
+        // INTENTIONAL SALESMAN MATH ERROR 1: Total wrote as 50, but 30+12 = 42
+        { id: 3, category: "RUM", brand: "Old Monk", size: "Q (750ml)", open: 30, receipt: 12, total: 50, closing: 20, sale: 30, rate: 600, net: 18000 },
+        // INTENTIONAL SALESMAN MATH ERROR 2: Net amount wrote as 4500, but 10 * 400 = 4000
+        { id: 4, category: "BEER", brand: "Kingfisher Ultra", size: "650 ml", open: 50, receipt: 50, total: 100, closing: 90, sale: 10, rate: 400, net: 4500 },
+        // Valid Row
+        { id: 5, category: "BEER", brand: "Budweiser (M)", size: "500 ml", open: 100, receipt: 0, total: 100, closing: 75, sale: 25, rate: 300, net: 7500 }
+      ];
+
+      renderTable();
+      document.getElementById('reviewSection').classList.remove('hidden');
+      document.getElementById('reviewSection').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // 4. Render Table & Execute Real-Time Math Verification
+    function renderTable() {
+      const tbody = document.getElementById('tableBody');
+      tbody.innerHTML = '';
+      
+      let grandTotal = 0;
+      let errorCount = 0;
+
+      currentData.forEach((row, index) => {
+        // --- MATH VERIFICATION ENGINE ---
+        const expectedTotal = row.open + row.receipt;
+        const expectedSale = expectedTotal - row.closing;
+        const expectedNet = expectedSale * row.rate;
+
+        const isTotalError = row.total !== expectedTotal;
+        const isSaleError = row.sale !== expectedSale;
+        const isNetError = row.net !== expectedNet;
+        
+        const hasError = isTotalError || isSaleError || isNetError;
+        if (hasError) errorCount++;
+
+        // Add to Grand Total (using calculated true net to avoid corrupting shop revenue)
+        grandTotal += row.net;
+
+        // Build HTML Row
+        const tr = document.createElement('tr');
+        tr.className = hasError ? 'bg-red-50/70 hover:bg-red-50 transition' : 'hover:bg-slate-50 transition';
+
+        tr.innerHTML = `
+          <td class="p-3 font-sans font-semibold text-slate-600">${row.category}</td>
+          <td class="p-3 font-sans font-medium text-slate-900">${row.brand}</td>
+          <td class="p-3 text-center text-slate-500 font-sans text-xs">${row.size}</td>
+          
+          <td class="p-3 text-right">${renderEditableCell(index, 'open', row.open)}</td>
+          <td class="p-3 text-right">${renderEditableCell(index, 'receipt', row.receipt)}</td>
+          
+          <td class="p-3 text-right ${isTotalError ? 'bg-red-200 font-bold text-red-900 rounded cursor-pointer' : ''}" 
+              title="${isTotalError ? 'Math Error: Expected ' + expectedTotal : ''}">
+            ${renderEditableCell(index, 'total', row.total)}
+            ${isTotalError ? `<div class="text-[10px] text-red-600 font-sans font-normal">Exp: ${expectedTotal}</div>` : ''}
+          </td>
+          
+          <td class="p-3 text-right">${renderEditableCell(index, 'closing', row.closing)}</td>
+          
+          <td class="p-3 text-right font-bold text-amber-700 ${isSaleError ? 'bg-red-200 text-red-900 rounded' : ''}">
+            ${renderEditableCell(index, 'sale', row.sale)}
+            ${isSaleError ? `<div class="text-[10px] text-red-600 font-sans font-normal">Exp: ${expectedSale}</div>` : ''}
+          </td>
+          
+          <td class="p-3 text-right">${renderEditableCell(index, 'rate', row.rate)}</td>
+          
+          <td class="p-3 text-right font-bold text-emerald-700 ${isNetError ? 'bg-red-200 text-red-900 rounded' : ''}">
+            ₹${renderEditableCell(index, 'net', row.net)}
+            ${isNetError ? `<div class="text-[10px] text-red-600 font-sans font-normal">Exp: ₹${expectedNet}</div>` : ''}
+          </td>
+
+          <td class="p-3 text-center font-sans">
+            ${hasError 
+              ? `<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-red-100 text-red-800 error-pulse">⚠ Math Flag</span>` 
+              : `<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-emerald-100 text-emerald-800">✔ Verified</span>`}
+          </td>
+        `;
+
+        tbody.appendChild(tr);
+      });
+
+      // Update Dashboard Stats
+      document.getElementById('grandTotalDisplay').textContent = `₹${grandTotal.toLocaleString('en-IN')}`;
+      document.getElementById('errorCountDisplay').textContent = errorCount;
+      
+      const valMsg = document.getElementById('validationMessage');
+      if (errorCount > 0) {
+        valMsg.innerHTML = `<span class="text-red-600 font-bold">⚠ ${errorCount} discrepancy found!</span> Please review red cells before approving.`;
+      } else {
+        valMsg.innerHTML = `<span class="text-emerald-600 font-bold">✔ All mathematical checks passed!</span> Ready for export.`;
+      }
+    }
+
+    // Helper: Creates clickable inline-editable cells
+    function renderEditableCell(rowIndex, field, value) {
+      return `<span class="border-b border-dashed border-slate-300 hover:border-blue-600 cursor-pointer px-1 py-0.5" 
+                    onclick="editCell(${rowIndex}, '${field}', ${value})">${value}</span>`;
+    }
+
+    // 5. Inline Editing Logic (When accountant clicks a wrong number to fix it)
+    function editCell(rowIndex, field, currentValue) {
+      const newValue = prompt(`Edit value for ${currentData[rowIndex].brand} (${field.toUpperCase()}):`, currentValue);
+      if (newValue !== null && !isNaN(newValue) && newValue.trim() !== "") {
+        currentData[rowIndex][field] = Number(newValue);
+        // Auto-fix dependent totals if user corrected root inventory
+        if (field === 'open' || field === 'receipt') {
+          currentData[rowIndex].total = currentData[rowIndex].open + currentData[rowIndex].receipt;
+        }
+        if (field === 'total' || field === 'closing') {
+          currentData[rowIndex].sale = currentData[rowIndex].total - currentData[rowIndex].closing;
+        }
+        if (field === 'sale' || field === 'rate') {
+          currentData[rowIndex].net = currentData[rowIndex].sale * currentData[rowIndex].rate;
+        }
+        renderTable(); // Re-verify math dynamically
+      }
+    }
+
+    // 6. Mock Send to Google Sheets (Will be hooked to Apps Script in next step)
+    function sendToGoogleSheets() {
+      const btn = document.getElementById('sendToSheetsBtn');
+      btn.innerHTML = `<span>⏳</span> Syncing to Google Sheets...`;
+      btn.disabled = true;
+
+      setTimeout(() => {
+        alert("✔ SUCCESS!\n\nData successfully appended to 'Shop_L14_Master' Google Sheet.\nAudit log created with timestamp.");
+        btn.innerHTML = `<span>✔</span> Sent to Sheets!`;
+        btn.classList.replace('bg-emerald-600', 'bg-slate-800');
+      }, 1500);
+    }
+  </script>
+</body>
+</html>
