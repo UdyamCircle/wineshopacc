@@ -108,7 +108,7 @@
       </div>
     </section>
 
-    <!-- ================= STEP 2: REVIEW DASHBOARD (Hidden initially) ================= -->
+    <!-- ================= STEP 2: REVIEW DASHBOARD ================= -->
     <section id="reviewSection" class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 hidden">
       
       <!-- Top Stats Bar -->
@@ -193,7 +193,7 @@
   <!-- ================= JAVASCRIPT LOGIC ================= -->
   <script>
     // YOUR SECURE APPS SCRIPT URL
-    const APPS_SCRIPT_URL = "[https://script.google.com/macros/s/AKfycbwrO4_8rCsO_wHdWlvISCpuc-rSV1smmmtYn-GEV1NnO-vV-xGsvCRFBssuNZhttwP7HA/exec](https://script.google.com/macros/s/AKfycbwrO4_8rCsO_wHdWlvISCpuc-rSV1smmmtYn-GEV1NnO-vV-xGsvCRFBssuNZhttwP7HA/exec)";
+    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwrO4_8rCsO_wHdWlvISCpuc-rSV1smmmtYn-GEV1NnO-vV-xGsvCRFBssuNZhttwP7HA/exec";
 
     let currentRecords = [];
     let currentMisc = [];
@@ -212,11 +212,31 @@
       }
     }
 
+    // UPDATED: Compress image and convert to Base64 to prevent network timeouts
     function fileToBase64(file) {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.readAsDataURL(file);
-        reader.onload = () => resolve(reader.result.split(',')[1]);
+        reader.onload = (event) => {
+          const img = new Image();
+          img.onload = () => {
+            // Create a temporary canvas to resize the image
+            const canvas = document.createElement('canvas');
+            const MAX_WIDTH = 1200; // Perfect size for AI OCR without being too heavy
+            const scaleSize = MAX_WIDTH / img.width;
+            
+            canvas.width = MAX_WIDTH;
+            canvas.height = img.height * scaleSize;
+            
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            
+            // Compress to JPEG at 70% quality and extract Base64
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+            resolve(dataUrl.split(',')[1]);
+          };
+          img.src = event.target.result;
+        };
         reader.onerror = error => reject(error);
       });
     }
