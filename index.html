@@ -4,21 +4,25 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>L-14 Daily Sales Reconciler</title>
-  <!-- Tailwind CSS CDN for instant UI styling -->
+  
+  <!-- Tailwind CSS for styling -->
   <script src="https://cdn.tailwindcss.com"></script>
+  
   <style>
-    /* Custom styles for mobile touch and error highlighting */
+    /* Custom styles for mobile touch and error animations */
     body { -webkit-tap-highlight-color: transparent; }
     .error-pulse { animation: pulse 2s infinite; }
     @keyframes pulse {
       0%, 100% { background-color: rgb(254 226 226); }
       50% { background-color: rgb(254 202 202); }
     }
+    /* Smooth scrolling for the review section */
+    html { scroll-behavior: smooth; }
   </style>
 </head>
 <body class="bg-slate-100 text-slate-800 min-h-screen pb-12">
 
-  <!-- Header -->
+  <!-- ================= HEADER ================= -->
   <header class="bg-slate-900 text-white shadow-lg sticky top-0 z-50">
     <div class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
       <div>
@@ -29,7 +33,7 @@
       </div>
       <div class="flex items-center gap-2">
         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
-          ● System Secure & Ready
+          ● System Ready
         </span>
       </div>
     </div>
@@ -37,10 +41,12 @@
 
   <main class="max-w-6xl mx-auto px-4 mt-6 space-y-6">
 
-    <!-- Shop & Date Selector Bar -->
+    <!-- ================= SHOP & DATE SELECTOR ================= -->
     <section class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 flex flex-wrap gap-4 items-center justify-between">
       <div class="flex items-center gap-3 w-full sm:w-auto">
         <label class="text-sm font-bold text-slate-700 whitespace-nowrap">🏪 Select Shop:</label>
+        
+        <!-- EDIT THESE TO YOUR ACTUAL SHOP NAMES -->
         <select id="shopSelector" class="bg-slate-50 border border-slate-300 text-slate-800 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2.5 font-medium w-full sm:w-64">
           <option value="Shop 1 - Main Market">Shop 1 - Main Market</option>
           <option value="Shop 2 - Railway Station">Shop 2 - Railway Station</option>
@@ -63,14 +69,15 @@
       </div>
     </section>
 
-    <!-- Step 1: Capture / Upload Section -->
+    <!-- ================= STEP 1: CAMERA / UPLOAD ================= -->
     <section class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
       <h2 class="text-base font-semibold text-slate-700 mb-4 flex items-center gap-2">
         <span>📸</span> Step 1: Capture Daily Parcha Records
       </h2>
       
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <!-- Page 1 Upload -->
+        
+        <!-- Upload Page 1 (Spirits) -->
         <label class="border-2 border-dashed border-slate-300 rounded-lg p-6 flex flex-col items-center justify-center cursor-pointer hover:border-blue-500 hover:bg-blue-50/50 transition group text-center relative overflow-hidden">
           <input type="file" id="page1Input" accept="image/*" capture="environment" class="hidden" onchange="handleImageSelect(event, 'page1Status')">
           <div class="w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mb-2 group-hover:scale-110 transition">📄</div>
@@ -79,14 +86,15 @@
           <span id="page1Status" class="mt-3 text-xs font-semibold px-2 py-1 rounded bg-slate-100 text-slate-500 hidden"></span>
         </label>
 
-        <!-- Page 2 Upload -->
-        <label class="border-2 border-dashed border-slate-300 rounded-lg p-6 flex flex-col items-center justify-center cursor-pointer hover:border-blue-500 hover:bg-blue-50/50 transition group text-center relative overflow-hidden">
+        <!-- Upload Page 2 (Beer & Misc) -->
+        <label class="border-2 border-dashed border-slate-300 rounded-lg p-6 flex flex-col items-center justify-center cursor-pointer hover:border-blue-500 hover:bg-amber-50/50 transition group text-center relative overflow-hidden">
           <input type="file" id="page2Input" accept="image/*" capture="environment" class="hidden" onchange="handleImageSelect(event, 'page2Status')">
           <div class="w-12 h-12 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center mb-2 group-hover:scale-110 transition">🍺</div>
           <span class="font-medium text-slate-700">Scan Page 2</span>
-          <span class="text-xs text-slate-400 mt-1">Beer, CL & Cash Summary</span>
+          <span class="text-xs text-slate-400 mt-1">Beer & Backside Miscellaneous</span>
           <span id="page2Status" class="mt-3 text-xs font-semibold px-2 py-1 rounded bg-slate-100 text-slate-500 hidden"></span>
         </label>
+
       </div>
 
       <!-- Action Buttons -->
@@ -100,88 +108,114 @@
       </div>
     </section>
 
-    <!-- Step 2: Verification Dashboard (Hidden by default) -->
+    <!-- ================= STEP 2: REVIEW DASHBOARD (Hidden initially) ================= -->
     <section id="reviewSection" class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 hidden">
+      
+      <!-- Top Stats Bar -->
       <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 pb-4 border-b border-slate-200">
         <div>
           <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
-            <span>🧐</span> Step 2: Accountant Verification Table
+            <span>🧐</span> Step 2: Accountant Verification
           </h2>
           <p class="text-xs text-slate-500">Review calculated totals. <span class="text-red-600 font-semibold">Red cells indicate salesman math errors.</span> Click any number to edit.</p>
         </div>
         
         <div class="flex items-center gap-4 bg-slate-50 px-4 py-2 rounded-lg border border-slate-200">
           <div class="text-right">
-            <div class="text-xs text-slate-400 font-medium">Total Shop Revenue</div>
+            <div class="text-xs text-slate-400 font-medium">Gross Shop Revenue</div>
             <div id="grandTotalDisplay" class="text-lg font-bold text-slate-800">₹0</div>
           </div>
           <div class="h-8 w-[1px] bg-slate-200"></div>
           <div class="text-right">
-            <div class="text-xs text-slate-400 font-medium">Discrepancies</div>
+            <div class="text-xs text-slate-400 font-medium">Math Errors</div>
             <div id="errorCountDisplay" class="text-lg font-bold text-red-600">0</div>
           </div>
         </div>
       </div>
 
-      <!-- Data Table -->
-      <div class="overflow-x-auto">
+      <!-- Inventory Data Table -->
+      <div class="overflow-x-auto mb-8">
         <table class="w-full text-left border-collapse text-sm">
           <thead>
             <tr class="bg-slate-800 text-white text-xs uppercase tracking-wider font-semibold">
               <th class="p-3 rounded-tl-lg">Category</th>
               <th class="p-3">Brand Name</th>
-              <th class="p-3 text-center">Size / Vol</th>
+              <th class="p-3 text-center">Size</th>
               <th class="p-3 text-right">Opening</th>
               <th class="p-3 text-right">Receipt</th>
               <th class="p-3 text-right">Total</th>
               <th class="p-3 text-right">Closing</th>
               <th class="p-3 text-right font-bold text-amber-300">Sale</th>
-              <th class="p-3 text-right">Rate (₹)</th>
-              <th class="p-3 text-right font-bold text-emerald-300">Net Amount (₹)</th>
+              <th class="p-3 text-right">Rate</th>
+              <th class="p-3 text-right font-bold text-emerald-300">Net Amount</th>
               <th class="p-3 rounded-tr-lg text-center">Status</th>
             </tr>
           </thead>
           <tbody id="tableBody" class="divide-y divide-slate-200 font-mono text-xs">
-            <!-- Dynamically populated by JS -->
+            <!-- Populated by JavaScript -->
           </tbody>
         </table>
       </div>
 
-      <!-- Footer & Submit -->
+      <!-- Miscellaneous Expenses Table -->
+      <div class="bg-slate-50 rounded-lg p-4 border border-slate-200 mb-6">
+        <h3 class="text-sm font-bold text-slate-800 mb-3 border-b border-slate-300 pb-2 flex items-center gap-2">
+          <span>📝</span> Miscellaneous Deductions & Expenses
+        </h3>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse text-sm">
+            <thead>
+              <tr class="text-slate-500 text-xs uppercase">
+                <th class="py-2 px-3">Expense ID</th>
+                <th class="py-2 px-3">Description</th>
+                <th class="py-2 px-3 text-right">Amount Deducted (₹)</th>
+              </tr>
+            </thead>
+            <tbody id="miscTableBody" class="divide-y divide-slate-200 font-mono text-xs text-slate-700">
+              <!-- Populated by JavaScript -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Final Submit Footer -->
       <div class="mt-6 pt-4 border-t border-slate-200 flex flex-col sm:flex-row justify-between items-center gap-4">
         <div id="validationMessage" class="text-sm font-sans font-medium text-slate-600"></div>
         <button id="sendToSheetsBtn" onclick="sendToGoogleSheets()" class="w-full sm:w-auto px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg shadow-md hover:shadow-lg transition flex items-center justify-center gap-2">
           <span>📊</span> Approve & Send to Google Sheets
         </button>
       </div>
+
     </section>
 
   </main>
 
+  <!-- ================= JAVASCRIPT LOGIC ================= -->
   <script>
-    // SECURE BACKEND PROXY URL
+    // YOUR SECURE APPS SCRIPT URL
     const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwrO4_8rCsO_wHdWlvISCpuc-rSV1smmmtYn-GEV1NnO-vV-xGsvCRFBssuNZhttwP7HA/exec";
 
-    // Global variable to hold our parsed data
-    let currentData = [];
+    // Global arrays to hold the parsed AI data
+    let currentRecords = [];
+    let currentMisc = [];
 
-    // Automatically set the date picker to Today's Date on load
+    // Automatically set the date picker to Today's Date when the app opens
     document.addEventListener("DOMContentLoaded", () => {
       document.getElementById('dateSelector').valueAsDate = new Date();
     });
 
-    // 1. Handle File Input UI Feedback
+    // 1. Show a checkmark when an image is selected
     function handleImageSelect(event, statusId) {
       const file = event.target.files[0];
       const statusEl = document.getElementById(statusId);
       if (file) {
-        statusEl.textContent = `✔ ${file.name.slice(0, 15)}...`;
+        statusEl.textContent = `✔ Selected`;
         statusEl.classList.remove('hidden', 'bg-slate-100', 'text-slate-500');
         statusEl.classList.add('bg-blue-100', 'text-blue-700');
       }
     }
 
-    // 2. Convert uploaded file to Base64 for secure API transfer
+    // 2. Convert image to Base64 to send to Apps Script safely
     function fileToBase64(file) {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -191,7 +225,7 @@
       });
     }
 
-    // 3. Send photo to Apps Script (which securely calls Gemini on the server)
+    // 3. Send image to AI via Apps Script Proxy
     async function processWithAI() {
       const fileInput1 = document.getElementById('page1Input');
       const fileInput2 = document.getElementById('page2Input');
@@ -204,13 +238,12 @@
       }
 
       const btn = document.getElementById('processBtn');
-      btn.innerHTML = `<span>⏳</span> AI Extracting & Verifying Math...`;
+      btn.innerHTML = `<span>⏳</span> AI Extracting Data...`;
       btn.disabled = true;
 
       try {
         const base64Image = await fileToBase64(fileToProcess);
 
-        // Send payload to our Google Apps Script Proxy
         const payload = {
           action: "OCR",
           image: base64Image,
@@ -225,50 +258,48 @@
         const result = await response.json();
         
         if (result.status === "success") {
-          currentData = result.data;
-          renderTable();
-          document.getElementById('reviewSection').classList.remove('hidden');
-          document.getElementById('reviewSection').scrollIntoView({ behavior: 'smooth' });
+          currentRecords = result.data.records || [];
+          currentMisc = result.data.miscellaneous || [];
+          
+          renderTables();
         } else {
           alert("AI Extraction Error: " + result.message);
         }
 
       } catch (error) {
         console.error("Error:", error);
-        alert("Failed to process the image. Please check your network connection and verify Apps Script deployment.");
+        alert("Failed to process the image. Check your network connection.");
       } finally {
         btn.innerHTML = `<span>🤖</span> Process with AI Vision`;
         btn.disabled = false;
       }
     }
 
-    // 4. Test tool: Load Sample Data to test UI immediately without uploading
+    // 4. Sample Data for Testing without the AI
     function loadSampleData() {
-      currentData = [
-        { id: 1, category: "IMFL", brand: "Blue Label", size: "Q (750ml)", open: 10, receipt: 5, total: 15, closing: 12, sale: 3, rate: 15000, net: 45000 },
-        { id: 2, category: "IMFL", brand: "Glenfiddich", size: "P (375ml)", open: 24, receipt: 12, total: 36, closing: 30, sale: 6, rate: 3500, net: 21000 },
-        // INTENTIONAL MATH ERROR 1: Total wrote as 50, but 30+12 = 42
-        { id: 3, category: "RUM", brand: "Old Monk", size: "Q (750ml)", open: 30, receipt: 12, total: 50, closing: 20, sale: 30, rate: 600, net: 18000 },
-        // INTENTIONAL MATH ERROR 2: Net amount wrote as 4500, but 10 * 400 = 4000
-        { id: 4, category: "BEER", brand: "Kingfisher Ultra", size: "650 ml", open: 50, receipt: 50, total: 100, closing: 90, sale: 10, rate: 400, net: 4500 },
-        { id: 5, category: "BEER", brand: "Budweiser (M)", size: "500 ml", open: 100, receipt: 0, total: 100, closing: 75, sale: 25, rate: 300, net: 7500 }
+      currentRecords = [
+        { id: 1, category: "IMFL", brand: "Blue Label", size: "Q", open: 10, receipt: 5, total: 15, closing: 12, sale: 3, rate: 15000, net: 45000 },
+        // Intentional Math Error for testing
+        { id: 2, category: "RUM", brand: "Old Monk", size: "Q", open: 30, receipt: 12, total: 50, closing: 20, sale: 30, rate: 600, net: 18000 }
       ];
-
-      renderTable();
-      document.getElementById('reviewSection').classList.remove('hidden');
-      document.getElementById('reviewSection').scrollIntoView({ behavior: 'smooth' });
+      currentMisc = [
+        { label: "miscellaneous 1", description: "Salesman Food & Tea", amount: 350 },
+        { label: "miscellaneous 2", description: "Broken Bottle - Ahata", amount: 450 }
+      ];
+      renderTables();
     }
 
-    // 5. Render Table & Execute Real-Time Math Verification
-    function renderTable() {
+    // 5. Build HTML Tables and Run Math Verification
+    function renderTables() {
+      // --- TABLE 1: INVENTORY ---
       const tbody = document.getElementById('tableBody');
       tbody.innerHTML = '';
       
       let grandTotal = 0;
       let errorCount = 0;
 
-      currentData.forEach((row, index) => {
-        // --- MATH VERIFICATION ENGINE ---
+      currentRecords.forEach((row, index) => {
+        // Core Mathematical Verification Engine
         const expectedTotal = row.open + row.receipt;
         const expectedSale = expectedTotal - row.closing;
         const expectedNet = expectedSale * row.rate;
@@ -279,7 +310,7 @@
         
         const hasError = isTotalError || isSaleError || isNetError;
         if (hasError) errorCount++;
-        row.hasError = hasError; // Track status for Sheets audit log
+        row.hasError = hasError; 
 
         grandTotal += row.net;
 
@@ -294,8 +325,7 @@
           <td class="p-3 text-right">${renderEditableCell(index, 'open', row.open)}</td>
           <td class="p-3 text-right">${renderEditableCell(index, 'receipt', row.receipt)}</td>
           
-          <td class="p-3 text-right ${isTotalError ? 'bg-red-200 font-bold text-red-900 rounded cursor-pointer' : ''}" 
-              title="${isTotalError ? 'Math Error: Expected ' + expectedTotal : ''}">
+          <td class="p-3 text-right ${isTotalError ? 'bg-red-200 font-bold text-red-900 rounded cursor-pointer' : ''}" title="${isTotalError ? 'Expected ' + expectedTotal : ''}">
             ${renderEditableCell(index, 'total', row.total)}
             ${isTotalError ? `<div class="text-[10px] text-red-600 font-sans font-normal">Exp: ${expectedTotal}</div>` : ''}
           </td>
@@ -324,55 +354,84 @@
         tbody.appendChild(tr);
       });
 
+      // Update Top Dashboard stats
       document.getElementById('grandTotalDisplay').textContent = `₹${grandTotal.toLocaleString('en-IN')}`;
       document.getElementById('errorCountDisplay').textContent = errorCount;
       
       const valMsg = document.getElementById('validationMessage');
       if (errorCount > 0) {
-        valMsg.innerHTML = `<span class="text-red-600 font-bold">⚠ ${errorCount} discrepancy found!</span> Please review red cells before approving.`;
+        valMsg.innerHTML = `<span class="text-red-600 font-bold">⚠ ${errorCount} discrepancy found!</span> Fix red cells before approving.`;
       } else {
-        valMsg.innerHTML = `<span class="text-emerald-600 font-bold">✔ All mathematical checks passed!</span> Ready for export.`;
+        valMsg.innerHTML = `<span class="text-emerald-600 font-bold">✔ All mathematical checks passed!</span> Ready to export.`;
       }
+
+
+      // --- TABLE 2: MISCELLANEOUS EXPENSES ---
+      const miscBody = document.getElementById('miscTableBody');
+      miscBody.innerHTML = '';
+      
+      if (currentMisc.length === 0) {
+        miscBody.innerHTML = `<tr><td colspan="3" class="py-4 text-center text-slate-400 font-sans text-sm">No miscellaneous expenses detected for this page.</td></tr>`;
+      } else {
+        currentMisc.forEach(misc => {
+          miscBody.innerHTML += `
+            <tr class="hover:bg-slate-100 transition">
+              <td class="py-2 px-3 font-semibold text-blue-600">${misc.label}</td>
+              <td class="py-2 px-3 font-sans">${misc.description}</td>
+              <td class="py-2 px-3 text-right font-bold text-red-600">- ₹${misc.amount}</td>
+            </tr>`;
+        });
+      }
+
+      // Show the entire review section
+      document.getElementById('reviewSection').classList.remove('hidden');
+      document.getElementById('reviewSection').scrollIntoView({ behavior: 'smooth' });
     }
 
-    // Helper: Creates clickable inline-editable cells
+    // Helper function for clickable edit cells
     function renderEditableCell(rowIndex, field, value) {
       return `<span class="border-b border-dashed border-slate-300 hover:border-blue-600 cursor-pointer px-1 py-0.5" 
                     onclick="editCell(${rowIndex}, '${field}', ${value})">${value}</span>`;
     }
 
-    // 6. Inline Editing Logic (When accountant clicks a wrong number to fix it)
+    // 6. Inline Editor Logic (Auto-recalculates dependent fields)
     function editCell(rowIndex, field, currentValue) {
-      const newValue = prompt(`Edit value for ${currentData[rowIndex].brand} (${field.toUpperCase()}):`, currentValue);
+      const newValue = prompt(`Edit value for ${currentRecords[rowIndex].brand} (${field.toUpperCase()}):`, currentValue);
       if (newValue !== null && !isNaN(newValue) && newValue.trim() !== "") {
-        currentData[rowIndex][field] = Number(newValue);
+        currentRecords[rowIndex][field] = Number(newValue);
+        
+        // Auto-fix cascading calculations
         if (field === 'open' || field === 'receipt') {
-          currentData[rowIndex].total = currentData[rowIndex].open + currentData[rowIndex].receipt;
+          currentRecords[rowIndex].total = currentRecords[rowIndex].open + currentRecords[rowIndex].receipt;
         }
         if (field === 'total' || field === 'closing') {
-          currentData[rowIndex].sale = currentData[rowIndex].total - currentData[rowIndex].closing;
+          currentRecords[rowIndex].sale = currentRecords[rowIndex].total - currentRecords[rowIndex].closing;
         }
         if (field === 'sale' || field === 'rate') {
-          currentData[rowIndex].net = currentData[rowIndex].sale * currentData[rowIndex].rate;
+          currentRecords[rowIndex].net = currentRecords[rowIndex].sale * currentRecords[rowIndex].rate;
         }
-        renderTable();
+        
+        // Re-render the tables to clear any fixed errors instantly
+        renderTables();
       }
     }
 
-    // 7. Send approved data to Apps Script to be saved in Sheets
+    // 7. Send final approved arrays to Apps Script and auto-advance
     async function sendToGoogleSheets() {
       const btn = document.getElementById('sendToSheetsBtn');
-      const shopName = document.getElementById('shopSelector').value;
+      const shopSelect = document.getElementById('shopSelector');
+      const shopName = shopSelect.value;
       const dateValue = document.getElementById('dateSelector').value;
 
-      btn.innerHTML = `<span>⏳</span> Sending to ${shopName} Sheet...`;
+      btn.innerHTML = `<span>⏳</span> Syncing to Sheets...`;
       btn.disabled = true;
 
       const payload = {
         action: "SAVE",
         shopName: shopName,
         date: dateValue,
-        records: currentData
+        records: currentRecords,
+        miscellaneous: currentMisc
       };
 
       try {
@@ -384,21 +443,26 @@
         const result = await response.json();
 
         if (result.status === "success") {
-          alert(`✔ SUCCESS!\n\n${result.message}.\n\nThe screen will now reset for the next shop.`);
+          alert(`✔ SUCCESS!\n\nData and Expenses for ${shopName} successfully saved to Google Sheets.\n\nThe app will now reset for the next shop.`);
           
-          // Auto-reset UI for the next shop
-          currentData = []; 
+          // --- AUTO-RESET LOGIC ---
+          currentRecords = []; 
+          currentMisc = [];
+          
           document.getElementById('tableBody').innerHTML = ''; 
+          document.getElementById('miscTableBody').innerHTML = '';
           document.getElementById('reviewSection').classList.add('hidden'); 
+          
           document.getElementById('page1Input').value = '';
           document.getElementById('page2Input').value = '';
           document.getElementById('page1Status').classList.add('hidden');
           document.getElementById('page2Status').classList.add('hidden');
           
-          const shopSelect = document.getElementById('shopSelector');
+          // Automatically advance the dropdown to the next shop down the list!
           if (shopSelect.selectedIndex < shopSelect.options.length - 1) {
             shopSelect.selectedIndex++;
           }
+          
           window.scrollTo({ top: 0, behavior: 'smooth' });
         } else {
           alert("Google Sheets Error: " + result.message);
