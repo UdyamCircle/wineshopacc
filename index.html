@@ -3,12 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- Added meta tag to force the browser to not cache the old version -->
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <title>L-14 Daily Sales Reconciler</title>
-  
   <script src="https://cdn.tailwindcss.com"></script>
-  
   <style>
     body { -webkit-tap-highlight-color: transparent; }
     .error-pulse { animation: pulse 2s infinite; }
@@ -31,7 +28,7 @@
       </div>
       <div class="flex items-center gap-2">
         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
-          ● v2.0 Live
+          ● v2.1 Live
         </span>
       </div>
     </div>
@@ -82,12 +79,20 @@
           <h2 class="text-lg font-bold text-slate-800">🧐 Step 2: Accountant Verification</h2>
           <p class="text-xs text-slate-500">Review calculated totals. <span class="text-red-600 font-semibold">Red cells indicate salesman math errors.</span> Click any number to edit.</p>
         </div>
+        
+        <!-- THE FIX: The missing errorCountDisplay box has been restored here! -->
         <div class="flex items-center gap-4 bg-slate-50 px-4 py-2 rounded-lg border border-slate-200">
           <div class="text-right">
             <div class="text-xs text-slate-400 font-medium">Gross Shop Revenue</div>
             <div id="grandTotalDisplay" class="text-lg font-bold text-slate-800">₹0</div>
           </div>
+          <div class="h-8 w-[1px] bg-slate-200"></div>
+          <div class="text-right">
+            <div class="text-xs text-slate-400 font-medium">Math Errors</div>
+            <div id="errorCountDisplay" class="text-lg font-bold text-red-600">0</div>
+          </div>
         </div>
+
       </div>
 
       <div class="overflow-x-auto mb-8">
@@ -137,7 +142,6 @@
       }
     }
 
-    // SAFER IMAGE COMPRESSOR
     function fileToBase64(file) {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -148,19 +152,13 @@
             const canvas = document.createElement('canvas');
             const MAX_WIDTH = 1200;
             let scaleSize = 1;
-            
-            // Only shrink the image if it's too big, never enlarge it
-            if (img.width > MAX_WIDTH) {
-              scaleSize = MAX_WIDTH / img.width;
-            }
+            if (img.width > MAX_WIDTH) scaleSize = MAX_WIDTH / img.width;
             
             canvas.width = img.width * scaleSize;
             canvas.height = img.height * scaleSize;
             
             const ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-            
-            // Compress to JPEG to dramatically reduce network load
             const dataUrl = canvas.toDataURL('image/jpeg', 0.6);
             resolve(dataUrl.split(',')[1]);
           };
@@ -191,10 +189,7 @@
           body: JSON.stringify(payload)
         });
 
-        // Check if Apps Script completely crashed (500 error)
-        if (!response.ok) {
-           throw new Error("Server Error: " + response.status + " " + response.statusText);
-        }
+        if (!response.ok) throw new Error("Server Error: " + response.status + " " + response.statusText);
 
         const result = await response.json();
         
@@ -213,7 +208,6 @@
 
       } catch (error) {
         console.error("Diagnostic Error:", error);
-        // DETAILED ERROR ALERT - We will no longer get the generic message!
         alert("CRITICAL ERROR:\n" + error.message + "\n\nIf this says 'Unexpected Token', Google returned an HTML page instead of JSON. If it says 'Failed to Fetch', it's a CORS issue.");
       } finally {
         btn.innerHTML = `<span>🤖</span> Process with AI Vision`;
@@ -258,7 +252,10 @@
             <td class="p-3 text-center">${hasError ? `<span class="px-2 py-0.5 rounded text-xs font-semibold bg-red-100 text-red-800 error-pulse">⚠ Flag</span>` : `<span class="px-2 py-0.5 rounded text-xs font-medium bg-emerald-100 text-emerald-800">✔ OK</span>`}</td>
           </tr>`;
       });
+      
       document.getElementById('grandTotalDisplay').textContent = `₹${grandTotal.toLocaleString('en-IN')}`;
+      
+      // THIS is the line that was crashing, the HTML box has now been restored!
       document.getElementById('errorCountDisplay').textContent = errorCount;
 
       const miscBody = document.getElementById('miscTableBody');
