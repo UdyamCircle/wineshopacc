@@ -28,7 +28,7 @@
       </div>
       <div class="flex items-center gap-2">
         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
-          ● v3.0 Live
+          ● v3.1 Live
         </span>
       </div>
     </div>
@@ -103,7 +103,7 @@
         </div>
       </div>
 
-      <div class="overflow-x-auto mb-8">
+      <div class="overflow-x-auto">
         <table class="w-full text-left border-collapse text-sm">
           <thead>
             <tr class="bg-slate-800 text-white text-xs uppercase tracking-wider font-semibold">
@@ -115,6 +115,13 @@
           </thead>
           <tbody id="tableBody" class="divide-y divide-slate-200 font-mono text-xs"></tbody>
         </table>
+      </div>
+
+      <!-- ADD NEW ROW BUTTON -->
+      <div class="mt-4 mb-8 flex justify-end">
+        <button onclick="addNewRow()" class="px-5 py-2 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-lg text-sm transition flex items-center gap-2 shadow-sm">
+          <span>➕</span> Add Missing Row
+        </button>
       </div>
 
       <div class="bg-slate-50 rounded-lg p-4 border border-slate-200 mb-6">
@@ -226,11 +233,23 @@
 
     function loadSampleData() {
       currentRecords = [
-        { _id: 0, category: "WINE", brand: "Sula", size: "Q", open: 5, receipt: 5, total: 10, closing: 8, sale: 2, rate: 0, net: 0 }, // Deliberate rate error test
-        { _id: 1, category: "RUM", brand: "Old Monk", size: "Q", open: 30, receipt: 12, total: 42, closing: 20, sale: 22, rate: 600, net: 13200 },
-        { _id: 2, category: "RUM", brand: "Old Monk", size: "P", open: 15, receipt: 0, total: 15, closing: 10, sale: 5, rate: 400, net: 2000 }
+        { _id: 0, category: "WINE", brand: "Sula", size: "Q", open: 5, receipt: 5, total: 10, closing: 8, sale: 2, rate: 0, net: 0 }, 
+        { _id: 1, category: "RUM", brand: "Old Monk", size: "Q", open: 30, receipt: 12, total: 42, closing: 20, sale: 22, rate: 600, net: 13200 }
       ];
       currentMisc = [{ label: "misc 1", description: "Food", amount: 350 }];
+      renderTables();
+    }
+
+    // FUNCTION TO MANUALLY ADD A ROW
+    function addNewRow() {
+      const newId = currentRecords.length > 0 ? Math.max(...currentRecords.map(r => r._id)) + 1 : 0;
+      currentRecords.push({
+        _id: newId,
+        category: "WINE", // Default sorting category
+        brand: "TAP TO EDIT",
+        size: "Q",
+        open: 0, receipt: 0, total: 0, closing: 0, sale: 0, rate: 0, net: 0
+      });
       renderTables();
     }
 
@@ -248,7 +267,6 @@
         catRecords.forEach(row => {
           const open = row.open || 0, receipt = row.receipt || 0, total = row.total || 0, closing = row.closing || 0, sale = row.sale || 0, rate = row.rate || 0, net = row.net || 0;
           
-          // Math & Rate Verification Engine
           const expectedTotal = open + receipt;
           const expectedSale = expectedTotal - closing;
           const expectedNet = expectedSale * rate;
@@ -271,13 +289,10 @@
               <td class="p-3 text-right ${total !== expectedTotal ? 'bg-red-200 text-red-900 font-bold' : ''}">${renderEditableNum(row._id, 'total', total)}</td>
               <td class="p-3 text-right">${renderEditableNum(row._id, 'closing', closing)}</td>
               <td class="p-3 text-right font-bold text-amber-700 ${sale !== expectedSale ? 'bg-red-200 text-red-900' : ''}">${renderEditableNum(row._id, 'sale', sale)}</td>
-              
-              <!-- NEW: RATE VALIDATION UI -->
               <td class="p-3 text-right ${isRateError ? 'bg-red-200 text-red-900 font-bold' : ''}">
                 ${renderEditableNum(row._id, 'rate', rate)}
                 ${isRateError ? `<div class="text-[10px] text-red-600 font-normal mt-1">Missing Rate!</div>` : ''}
               </td>
-              
               <td class="p-3 text-right font-bold text-emerald-700 ${net !== expectedNet ? 'bg-red-200 text-red-900' : ''}">₹${renderEditableNum(row._id, 'net', net)}</td>
               <td class="p-3 text-center">${hasError ? `<span class="px-2 py-0.5 rounded text-xs font-semibold bg-red-100 text-red-800 error-pulse">⚠ Flag</span>` : `<span class="px-2 py-0.5 rounded text-xs font-medium bg-emerald-100 text-emerald-800">✔ OK</span>`}</td>
             </tr>`;
@@ -346,8 +361,6 @@
 
     async function sendToGoogleSheets() {
       const btn = document.getElementById('sendToSheetsBtn');
-      
-      // Stop the user if there are uncorrected errors!
       const errorCount = parseInt(document.getElementById('errorCountDisplay').textContent);
       if (errorCount > 0) {
         alert("You have " + errorCount + " flagged errors (Red Cells)! Please click the red cells to fix missing rates or bad math before sending to Sheets.");
