@@ -28,7 +28,7 @@
       </div>
       <div class="flex items-center gap-2">
         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
-          ● v2.3 Live
+          ● v3.0 Live
         </span>
       </div>
     </div>
@@ -38,8 +38,6 @@
     <section class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 flex flex-wrap gap-4 items-center justify-between">
       <div class="flex items-center gap-3 w-full sm:w-auto">
         <label class="text-sm font-bold text-slate-700 whitespace-nowrap">🏪 Select Shop:</label>
-        
-        <!-- UPDATED 15 SHOPS -->
         <select id="shopSelector" class="bg-slate-50 border border-slate-300 text-slate-800 text-sm rounded-lg p-2.5 font-medium w-full sm:w-64">
           <option value="Bhangarh Shop">Bhangarh Shop</option>
           <option value="Mehatpur Border">Mehatpur Border</option>
@@ -57,7 +55,6 @@
           <option value="Om Bhujiya">Om Bhujiya</option>
           <option value="Rakkar colony">Rakkar colony</option>
         </select>
-        
       </div>
       <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
         <label class="text-sm font-bold text-slate-700">📅 Date:</label>
@@ -100,7 +97,7 @@
           </div>
           <div class="h-8 w-[1px] bg-slate-200"></div>
           <div class="text-right">
-            <div class="text-xs text-slate-400 font-medium">Math Errors</div>
+            <div class="text-xs text-slate-400 font-medium">Errors / Missing Info</div>
             <div id="errorCountDisplay" class="text-lg font-bold text-red-600">0</div>
           </div>
         </div>
@@ -218,7 +215,6 @@
         } else {
           alert("AI Extraction Error: " + (result.message || "Unknown error."));
         }
-
       } catch (error) {
         console.error("Diagnostic Error:", error);
         alert("CRITICAL ERROR:\n" + error.message);
@@ -230,9 +226,9 @@
 
     function loadSampleData() {
       currentRecords = [
-        { _id: 0, category: "WINE", brand: "Sula", size: "Q", open: 5, receipt: 5, total: 10, closing: 8, sale: 2, rate: 1000, net: 2000 },
+        { _id: 0, category: "WINE", brand: "Sula", size: "Q", open: 5, receipt: 5, total: 10, closing: 8, sale: 2, rate: 0, net: 0 }, // Deliberate rate error test
         { _id: 1, category: "RUM", brand: "Old Monk", size: "Q", open: 30, receipt: 12, total: 42, closing: 20, sale: 22, rate: 600, net: 13200 },
-        { _id: 2, category: "RUM", brand: "Bacardi", size: "P", open: 15, receipt: 0, total: 15, closing: 10, sale: 5, rate: 400, net: 2000 }
+        { _id: 2, category: "RUM", brand: "Old Monk", size: "P", open: 15, receipt: 0, total: 15, closing: 10, sale: 5, rate: 400, net: 2000 }
       ];
       currentMisc = [{ label: "misc 1", description: "Food", amount: 350 }];
       renderTables();
@@ -247,14 +243,18 @@
 
       categories.forEach(cat => {
         const catRecords = currentRecords.filter(r => (r.category || "UNKNOWN") === cat);
-        
         let catOpen = 0, catReceipt = 0, catTotal = 0, catClosing = 0, catSale = 0, catNet = 0;
 
         catRecords.forEach(row => {
           const open = row.open || 0, receipt = row.receipt || 0, total = row.total || 0, closing = row.closing || 0, sale = row.sale || 0, rate = row.rate || 0, net = row.net || 0;
           
-          const expectedTotal = open + receipt, expectedSale = expectedTotal - closing, expectedNet = expectedSale * rate;
-          const hasError = (total !== expectedTotal) || (sale !== expectedSale) || (net !== expectedNet);
+          // Math & Rate Verification Engine
+          const expectedTotal = open + receipt;
+          const expectedSale = expectedTotal - closing;
+          const expectedNet = expectedSale * rate;
+          const isRateError = (sale > 0 && rate === 0);
+          
+          const hasError = (total !== expectedTotal) || (sale !== expectedSale) || (net !== expectedNet) || isRateError;
           if (hasError) errorCount++;
           row.hasError = hasError; 
           
@@ -271,7 +271,13 @@
               <td class="p-3 text-right ${total !== expectedTotal ? 'bg-red-200 text-red-900 font-bold' : ''}">${renderEditableNum(row._id, 'total', total)}</td>
               <td class="p-3 text-right">${renderEditableNum(row._id, 'closing', closing)}</td>
               <td class="p-3 text-right font-bold text-amber-700 ${sale !== expectedSale ? 'bg-red-200 text-red-900' : ''}">${renderEditableNum(row._id, 'sale', sale)}</td>
-              <td class="p-3 text-right">${renderEditableNum(row._id, 'rate', rate)}</td>
+              
+              <!-- NEW: RATE VALIDATION UI -->
+              <td class="p-3 text-right ${isRateError ? 'bg-red-200 text-red-900 font-bold' : ''}">
+                ${renderEditableNum(row._id, 'rate', rate)}
+                ${isRateError ? `<div class="text-[10px] text-red-600 font-normal mt-1">Missing Rate!</div>` : ''}
+              </td>
+              
               <td class="p-3 text-right font-bold text-emerald-700 ${net !== expectedNet ? 'bg-red-200 text-red-900' : ''}">₹${renderEditableNum(row._id, 'net', net)}</td>
               <td class="p-3 text-center">${hasError ? `<span class="px-2 py-0.5 rounded text-xs font-semibold bg-red-100 text-red-800 error-pulse">⚠ Flag</span>` : `<span class="px-2 py-0.5 rounded text-xs font-medium bg-emerald-100 text-emerald-800">✔ OK</span>`}</td>
             </tr>`;
@@ -309,12 +315,12 @@
     }
 
     function renderEditableNum(id, field, value) {
-      return `<span class="border-b border-dashed border-slate-400 hover:border-blue-600 cursor-pointer px-1 py-0.5" onclick="editNum(${id}, '${field}', ${value})">${value}</span>`;
+      return `<span class="border-b border-dashed border-slate-400 hover:border-blue-600 cursor-pointer px-1 py-0.5 block min-w-[20px]" onclick="editNum(${id}, '${field}', ${value})">${value}</span>`;
     }
     
     function renderEditableText(id, field, value) {
       const displayVal = value || "-";
-      return `<span class="border-b border-dashed border-slate-400 hover:border-blue-600 cursor-pointer px-1 py-0.5" onclick="editText(${id}, '${field}', '${displayVal}')">${displayVal}</span>`;
+      return `<span class="border-b border-dashed border-slate-400 hover:border-blue-600 cursor-pointer px-1 py-0.5 block min-w-[30px]" onclick="editText(${id}, '${field}', '${displayVal}')">${displayVal}</span>`;
     }
 
     function editNum(id, field, currentValue) {
@@ -340,12 +346,20 @@
 
     async function sendToGoogleSheets() {
       const btn = document.getElementById('sendToSheetsBtn');
+      
+      // Stop the user if there are uncorrected errors!
+      const errorCount = parseInt(document.getElementById('errorCountDisplay').textContent);
+      if (errorCount > 0) {
+        alert("You have " + errorCount + " flagged errors (Red Cells)! Please click the red cells to fix missing rates or bad math before sending to Sheets.");
+        return;
+      }
+      
       btn.innerHTML = `<span>⏳</span> Syncing to Sheets...`; btn.disabled = true;
       try {
         const response = await fetch(APPS_SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "SAVE", shopName: document.getElementById('shopSelector').value, date: document.getElementById('dateSelector').value, records: currentRecords, miscellaneous: currentMisc }) });
         const result = await response.json();
         if (result.status === "success") {
-          alert(`✔ SUCCESS!\n\nData saved successfully.`);
+          alert(`✔ SUCCESS!\n\nData saved in Q, P, N format to Sheets.`);
           location.reload(); 
         } else alert("Error: " + result.message);
       } catch (error) {
