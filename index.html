@@ -28,22 +28,36 @@
       </div>
       <div class="flex items-center gap-2">
         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
-          ● v2.1 Live
+          ● v2.3 Live
         </span>
       </div>
     </div>
   </header>
 
   <main class="max-w-6xl mx-auto px-4 mt-6 space-y-6">
-
     <section class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 flex flex-wrap gap-4 items-center justify-between">
       <div class="flex items-center gap-3 w-full sm:w-auto">
         <label class="text-sm font-bold text-slate-700 whitespace-nowrap">🏪 Select Shop:</label>
+        
+        <!-- UPDATED 15 SHOPS -->
         <select id="shopSelector" class="bg-slate-50 border border-slate-300 text-slate-800 text-sm rounded-lg p-2.5 font-medium w-full sm:w-64">
-          <option value="Shop 1 - Main Market">Shop 1 - Main Market</option>
-          <option value="Shop 2 - Railway Station">Shop 2 - Railway Station</option>
-          <option value="Shop 3 - Highway Plaza">Shop 3 - Highway Plaza</option>
+          <option value="Bhangarh Shop">Bhangarh Shop</option>
+          <option value="Mehatpur Border">Mehatpur Border</option>
+          <option value="Mehatpur Main">Mehatpur Main</option>
+          <option value="RBL">RBL</option>
+          <option value="RTO">RTO</option>
+          <option value="Dehlan">Dehlan</option>
+          <option value="Badala Market">Badala Market</option>
+          <option value="Shiva Bricks">Shiva Bricks</option>
+          <option value="Badala New">Badala New</option>
+          <option value="Badala Village">Badala Village</option>
+          <option value="Lahori">Lahori</option>
+          <option value="Jalgaran Tabba">Jalgaran Tabba</option>
+          <option value="Madanpur Basoli">Madanpur Basoli</option>
+          <option value="Om Bhujiya">Om Bhujiya</option>
+          <option value="Rakkar colony">Rakkar colony</option>
         </select>
+        
       </div>
       <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
         <label class="text-sm font-bold text-slate-700">📅 Date:</label>
@@ -77,10 +91,8 @@
       <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 pb-4 border-b border-slate-200">
         <div>
           <h2 class="text-lg font-bold text-slate-800">🧐 Step 2: Accountant Verification</h2>
-          <p class="text-xs text-slate-500">Review calculated totals. <span class="text-red-600 font-semibold">Red cells indicate salesman math errors.</span> Click any number to edit.</p>
+          <p class="text-xs text-slate-500">Click ANY text or number to edit. Review horizontal & vertical math.</p>
         </div>
-        
-        <!-- THE FIX: The missing errorCountDisplay box has been restored here! -->
         <div class="flex items-center gap-4 bg-slate-50 px-4 py-2 rounded-lg border border-slate-200">
           <div class="text-right">
             <div class="text-xs text-slate-400 font-medium">Gross Shop Revenue</div>
@@ -92,7 +104,6 @@
             <div id="errorCountDisplay" class="text-lg font-bold text-red-600">0</div>
           </div>
         </div>
-
       </div>
 
       <div class="overflow-x-auto mb-8">
@@ -197,6 +208,8 @@
           currentRecords = Array.isArray(result.data.records) ? result.data.records : [];
           currentMisc = Array.isArray(result.data.miscellaneous) ? result.data.miscellaneous : [];
           
+          currentRecords.forEach((r, idx) => r._id = idx);
+
           if (currentRecords.length === 0) {
             alert("AI processed the image but couldn't find a table. Try a clearer photo.");
           } else {
@@ -208,7 +221,7 @@
 
       } catch (error) {
         console.error("Diagnostic Error:", error);
-        alert("CRITICAL ERROR:\n" + error.message + "\n\nIf this says 'Unexpected Token', Google returned an HTML page instead of JSON. If it says 'Failed to Fetch', it's a CORS issue.");
+        alert("CRITICAL ERROR:\n" + error.message);
       } finally {
         btn.innerHTML = `<span>🤖</span> Process with AI Vision`;
         btn.disabled = false;
@@ -216,46 +229,70 @@
     }
 
     function loadSampleData() {
-      currentRecords = [{ id: 1, category: "IMFL", brand: "Blue Label", size: "Q", open: 10, receipt: 5, total: 15, closing: 12, sale: 3, rate: 15000, net: 45000 }];
+      currentRecords = [
+        { _id: 0, category: "WINE", brand: "Sula", size: "Q", open: 5, receipt: 5, total: 10, closing: 8, sale: 2, rate: 1000, net: 2000 },
+        { _id: 1, category: "RUM", brand: "Old Monk", size: "Q", open: 30, receipt: 12, total: 42, closing: 20, sale: 22, rate: 600, net: 13200 },
+        { _id: 2, category: "RUM", brand: "Bacardi", size: "P", open: 15, receipt: 0, total: 15, closing: 10, sale: 5, rate: 400, net: 2000 }
+      ];
       currentMisc = [{ label: "misc 1", description: "Food", amount: 350 }];
       renderTables();
     }
 
     function renderTables() {
-      if (!Array.isArray(currentRecords)) currentRecords = [];
-      if (!Array.isArray(currentMisc)) currentMisc = [];
-
       const tbody = document.getElementById('tableBody');
       tbody.innerHTML = '';
       let grandTotal = 0, errorCount = 0;
 
-      currentRecords.forEach((row, index) => {
-        const open = row.open || 0, receipt = row.receipt || 0, total = row.total || 0, closing = row.closing || 0, sale = row.sale || 0, rate = row.rate || 0, net = row.net || 0;
-        const expectedTotal = open + receipt, expectedSale = expectedTotal - closing, expectedNet = expectedSale * rate;
-        const hasError = (total !== expectedTotal) || (sale !== expectedSale) || (net !== expectedNet);
-        if (hasError) errorCount++;
-        row.hasError = hasError; 
-        grandTotal += net;
+      const categories = [...new Set(currentRecords.map(r => r.category || "UNKNOWN"))];
+
+      categories.forEach(cat => {
+        const catRecords = currentRecords.filter(r => (r.category || "UNKNOWN") === cat);
+        
+        let catOpen = 0, catReceipt = 0, catTotal = 0, catClosing = 0, catSale = 0, catNet = 0;
+
+        catRecords.forEach(row => {
+          const open = row.open || 0, receipt = row.receipt || 0, total = row.total || 0, closing = row.closing || 0, sale = row.sale || 0, rate = row.rate || 0, net = row.net || 0;
+          
+          const expectedTotal = open + receipt, expectedSale = expectedTotal - closing, expectedNet = expectedSale * rate;
+          const hasError = (total !== expectedTotal) || (sale !== expectedSale) || (net !== expectedNet);
+          if (hasError) errorCount++;
+          row.hasError = hasError; 
+          
+          catOpen += open; catReceipt += receipt; catTotal += total; catClosing += closing; catSale += sale; catNet += net;
+          grandTotal += net;
+
+          tbody.innerHTML += `
+            <tr class="${hasError ? 'bg-red-50/70 hover:bg-red-50' : 'hover:bg-slate-50'}">
+              <td class="p-3 font-semibold text-slate-600">${renderEditableText(row._id, 'category', row.category)}</td>
+              <td class="p-3 font-medium text-slate-900">${renderEditableText(row._id, 'brand', row.brand)}</td>
+              <td class="p-3 text-center text-slate-500 text-xs">${renderEditableText(row._id, 'size', row.size)}</td>
+              <td class="p-3 text-right">${renderEditableNum(row._id, 'open', open)}</td>
+              <td class="p-3 text-right">${renderEditableNum(row._id, 'receipt', receipt)}</td>
+              <td class="p-3 text-right ${total !== expectedTotal ? 'bg-red-200 text-red-900 font-bold' : ''}">${renderEditableNum(row._id, 'total', total)}</td>
+              <td class="p-3 text-right">${renderEditableNum(row._id, 'closing', closing)}</td>
+              <td class="p-3 text-right font-bold text-amber-700 ${sale !== expectedSale ? 'bg-red-200 text-red-900' : ''}">${renderEditableNum(row._id, 'sale', sale)}</td>
+              <td class="p-3 text-right">${renderEditableNum(row._id, 'rate', rate)}</td>
+              <td class="p-3 text-right font-bold text-emerald-700 ${net !== expectedNet ? 'bg-red-200 text-red-900' : ''}">₹${renderEditableNum(row._id, 'net', net)}</td>
+              <td class="p-3 text-center">${hasError ? `<span class="px-2 py-0.5 rounded text-xs font-semibold bg-red-100 text-red-800 error-pulse">⚠ Flag</span>` : `<span class="px-2 py-0.5 rounded text-xs font-medium bg-emerald-100 text-emerald-800">✔ OK</span>`}</td>
+            </tr>`;
+        });
 
         tbody.innerHTML += `
-          <tr class="${hasError ? 'bg-red-50/70 hover:bg-red-50' : 'hover:bg-slate-50'}">
-            <td class="p-3 font-semibold text-slate-600">${row.category || "-"}</td>
-            <td class="p-3 font-medium text-slate-900">${row.brand || "-"}</td>
-            <td class="p-3 text-center text-slate-500 text-xs">${row.size || "-"}</td>
-            <td class="p-3 text-right">${renderEditableCell(index, 'open', open)}</td>
-            <td class="p-3 text-right">${renderEditableCell(index, 'receipt', receipt)}</td>
-            <td class="p-3 text-right ${total !== expectedTotal ? 'bg-red-200 text-red-900 font-bold' : ''}">${renderEditableCell(index, 'total', total)}</td>
-            <td class="p-3 text-right">${renderEditableCell(index, 'closing', closing)}</td>
-            <td class="p-3 text-right font-bold text-amber-700 ${sale !== expectedSale ? 'bg-red-200 text-red-900' : ''}">${renderEditableCell(index, 'sale', sale)}</td>
-            <td class="p-3 text-right">${renderEditableCell(index, 'rate', rate)}</td>
-            <td class="p-3 text-right font-bold text-emerald-700 ${net !== expectedNet ? 'bg-red-200 text-red-900' : ''}">₹${renderEditableCell(index, 'net', net)}</td>
-            <td class="p-3 text-center">${hasError ? `<span class="px-2 py-0.5 rounded text-xs font-semibold bg-red-100 text-red-800 error-pulse">⚠ Flag</span>` : `<span class="px-2 py-0.5 rounded text-xs font-medium bg-emerald-100 text-emerald-800">✔ OK</span>`}</td>
-          </tr>`;
+          <tr class="bg-slate-200 text-slate-800 font-bold uppercase tracking-wider">
+            <td colspan="3" class="p-3 text-right">TOTAL ${cat}:</td>
+            <td class="p-3 text-right">${catOpen}</td>
+            <td class="p-3 text-right">${catReceipt}</td>
+            <td class="p-3 text-right text-blue-800">${catTotal}</td>
+            <td class="p-3 text-right">${catClosing}</td>
+            <td class="p-3 text-right text-amber-700">${catSale}</td>
+            <td class="p-3 text-right">-</td>
+            <td class="p-3 text-right text-emerald-700">₹${catNet}</td>
+            <td class="p-3"></td>
+          </tr>
+        `;
       });
       
       document.getElementById('grandTotalDisplay').textContent = `₹${grandTotal.toLocaleString('en-IN')}`;
-      
-      // THIS is the line that was crashing, the HTML box has now been restored!
       document.getElementById('errorCountDisplay').textContent = errorCount;
 
       const miscBody = document.getElementById('miscTableBody');
@@ -263,7 +300,7 @@
       if (currentMisc.length === 0) {
         miscBody.innerHTML = `<tr><td colspan="3" class="py-4 text-center text-slate-400">No miscellaneous expenses detected.</td></tr>`;
       } else {
-        currentMisc.forEach(misc => {
+        currentMisc.forEach((misc, idx) => {
           miscBody.innerHTML += `<tr class="hover:bg-slate-100"><td class="py-2 px-3 font-semibold text-blue-600">${misc.label || "-"}</td><td class="py-2 px-3">${misc.description || "-"}</td><td class="py-2 px-3 text-right font-bold text-red-600">- ₹${misc.amount || 0}</td></tr>`;
         });
       }
@@ -271,17 +308,32 @@
       document.getElementById('reviewSection').scrollIntoView({ behavior: 'smooth' });
     }
 
-    function renderEditableCell(rowIndex, field, value) {
-      return `<span class="border-b border-dashed border-slate-300 hover:border-blue-600 cursor-pointer px-1 py-0.5" onclick="editCell(${rowIndex}, '${field}', ${value})">${value}</span>`;
+    function renderEditableNum(id, field, value) {
+      return `<span class="border-b border-dashed border-slate-400 hover:border-blue-600 cursor-pointer px-1 py-0.5" onclick="editNum(${id}, '${field}', ${value})">${value}</span>`;
+    }
+    
+    function renderEditableText(id, field, value) {
+      const displayVal = value || "-";
+      return `<span class="border-b border-dashed border-slate-400 hover:border-blue-600 cursor-pointer px-1 py-0.5" onclick="editText(${id}, '${field}', '${displayVal}')">${displayVal}</span>`;
     }
 
-    function editCell(rowIndex, field, currentValue) {
-      const newValue = prompt(`Edit value:`, currentValue);
+    function editNum(id, field, currentValue) {
+      const recordIndex = currentRecords.findIndex(r => r._id === id);
+      const newValue = prompt(`Edit number for ${currentRecords[recordIndex].brand} (${field.toUpperCase()}):`, currentValue);
       if (newValue !== null && !isNaN(newValue) && newValue.trim() !== "") {
-        currentRecords[rowIndex][field] = Number(newValue);
-        if (field === 'open' || field === 'receipt') currentRecords[rowIndex].total = currentRecords[rowIndex].open + currentRecords[rowIndex].receipt;
-        if (field === 'total' || field === 'closing') currentRecords[rowIndex].sale = currentRecords[rowIndex].total - currentRecords[rowIndex].closing;
-        if (field === 'sale' || field === 'rate') currentRecords[rowIndex].net = currentRecords[rowIndex].sale * currentRecords[rowIndex].rate;
+        currentRecords[recordIndex][field] = Number(newValue);
+        if (field === 'open' || field === 'receipt') currentRecords[recordIndex].total = currentRecords[recordIndex].open + currentRecords[recordIndex].receipt;
+        if (field === 'total' || field === 'closing') currentRecords[recordIndex].sale = currentRecords[recordIndex].total - currentRecords[recordIndex].closing;
+        if (field === 'sale' || field === 'rate') currentRecords[recordIndex].net = currentRecords[recordIndex].sale * currentRecords[recordIndex].rate;
+        renderTables();
+      }
+    }
+
+    function editText(id, field, currentValue) {
+      const recordIndex = currentRecords.findIndex(r => r._id === id);
+      const newValue = prompt(`Edit text (${field.toUpperCase()}):`, currentValue !== "-" ? currentValue : "");
+      if (newValue !== null && newValue.trim() !== "") {
+        currentRecords[recordIndex][field] = newValue.trim().toUpperCase();
         renderTables();
       }
     }
